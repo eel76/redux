@@ -6,12 +6,8 @@
 
 #include <iostream>
 
-void debug_helper() {
-  std::cout << "draw\n";
-}
-
 auto draw() {
-  return [](auto) { debug_helper(); };
+  return [](auto) { std::cout << "draw\n"; };
 }
 
 int main() {
