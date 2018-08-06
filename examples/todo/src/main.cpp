@@ -18,12 +18,15 @@ int main() {
 
   auto store = redux::Store{ state::TodoApp{}, todoApp, draw() };
 
-  store.dispatch(action::addTodo("Learn about actions"));
-  store.dispatch(action::addTodo("Learn about reducers"));
-  store.dispatch(action::addTodo("Learn about store"));
-  store.dispatch(action::toggleTodo(0));
-  store.dispatch(action::toggleTodo(1));
+  // store.dispatch(action::addTodo("Learn about actions"));
+  // store.dispatch(action::addTodo("Learn about reducers"));
+  // store.dispatch(action::addTodo("Learn about store"));
+  // store.dispatch(action::toggleTodo(0));
+  // store.dispatch(action::toggleTodo(1));
+
+  std::cout << "before\n";
   store.dispatch(action::setVisibilityFilter(state::VisibilityFilter::SHOW_COMPLETED));
+  std::cout << "after\n";
 
   // auto event = char{};
 
