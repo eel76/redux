@@ -25,13 +25,18 @@ namespace redux {
       });
     }
 
+    State getState() const {
+      return mState;
+    }
+
     private:
-    std::decay_t<State>   mState;
-    std::decay_t<Reducer> mReducer;
-    std::decay_t<View>    mView;
-    EventLoop             mEventLoop;
+    State     mState;
+    Reducer   mReducer;
+    View      mView;
+    EventLoop mEventLoop;
   };
 
-  template <class Model, class Reducer, class View>
-  Store(Model&& initial, Reducer&& reducer, View&& view)->Store<Model, Reducer, View>;
+  template <class State, class Reducer, class View>
+  Store(State&& initial, Reducer&& reducer, View&& view)
+  ->Store<std::decay_t<State>, std::decay_t<Reducer>, std::decay_t<View>>;
 }

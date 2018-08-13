@@ -4,23 +4,6 @@
 #include <functional>
 
 namespace redux {
-  // inline namespace detail
-  //{
-  //  template <class Action, class Update>
-  //  invoke()
-  //  {
-  //    return [](auto state) {
-  //      auto const newState = action(state);
-  //      update(newState);
-  //      return newState;
-  //    }
-
-  //    update(action(state));
-
-  //  }
-
-  //}
-
   template <class Action>
   struct Invoke
   {
