@@ -6,25 +6,34 @@
 
 #include <iostream>
 
-auto draw() {
-  return [](auto) { std::cout << "draw\n"; };
+auto drawVisibilityFilter() {
+  return redux::View{ [](state::VisibilityFilter) {
+    std::cout << "VisibilityFilter\n";
+  } };
+}
+
+auto drawTodos() {
+  return redux::View{ [](state::TodoApp) { std::cout << "Todos\n"; } };
 }
 
 int main() {
   auto const visibilityFilter = redux::Reducer<action::SetVisibilityFilter>();
-  auto const todos = redux::Reducer<action::AddTodo, action::ToggleTodo>();
+  auto const todos   = redux::Reducer<action::AddTodo, action::ToggleTodo>();
+  auto const reducer = combineReducers(todos, visibilityFilter);
 
-  auto const todoApp = combineReducers(todos, visibilityFilter);
+  // auto const views = redux::Views{ drawVisibilityFilter(), drawTodos() };
+  auto const view = combineViews(drawVisibilityFilter(), drawTodos());
 
-  auto store = redux::Store{ state::TodoApp{}, todoApp, draw() };
-
-  // store.dispatch(action::addTodo("Learn about actions"));
-  // store.dispatch(action::addTodo("Learn about reducers"));
-  // store.dispatch(action::addTodo("Learn about store"));
-  // store.dispatch(action::toggleTodo(0));
-  // store.dispatch(action::toggleTodo(1));
+  auto store = redux::Store{ state::TodoApp{}, reducer, view };
 
   std::cout << "before\n";
+
+  store.dispatch(action::addTodo("Learn about actions"));
+  store.dispatch(action::addTodo("Learn about reducers"));
+  store.dispatch(action::addTodo("Learn about store"));
+  store.dispatch(action::toggleTodo(0));
+  store.dispatch(action::toggleTodo(1));
+
   store.dispatch(action::setVisibilityFilter(state::VisibilityFilter::SHOW_COMPLETED));
   std::cout << "after\n";
 
