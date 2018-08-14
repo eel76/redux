@@ -7,36 +7,54 @@ namespace redux {
   template <class Action>
   struct Invoke
   {
-    template <class State, class Update>
-    auto operator()(State state, Action action, Update update) const {
-      return update(action(state));
+    template <class State>
+    auto operator()(State&& state, Action&& action) const {
+      return std::invoke(std::forward<Action>(action), std::forward<State>(state));
     }
   };
 
   struct ForwardState
   {
-    template <class State, class... Ignored>
-    auto operator()(State state, Ignored&&...) const {
-      return state;
+    template <class State, class Unknown>
+    decltype(auto) operator()(State&& state, Unknown&&) const {
+      return std::forward<State>(state);
     }
   };
 
   template <class... Actions>
-  using Reducer = Overloaded<Invoke<Actions>..., ForwardState>;
+  struct Reducer : Overloaded<Invoke<Actions>..., ForwardState>
+  {};
 
-  template <size_t... Indexes, class ReducerTuple>
-  auto combineReducersImpl(std::index_sequence<Indexes...>, ReducerTuple&& reducerTuple) {
-    return [reducers{ std::forward<ReducerTuple>(
-           reducerTuple) }](auto state, auto action, auto update) -> decltype(state) {
-      return update(decltype(state){
-      (std::invoke(std::get<Indexes>(reducers),
-                   redux::get<Indexes, sizeof...(Indexes)>(state), action, update))... });
-    };
-  }
+  template <class... Reducers>
+  struct CombinedReducer
+  {
+    template <class... ParamReducers>
+    explicit CombinedReducer(ParamReducers&&... reducers)
+    : mReducers(std::forward<ParamReducers>(reducers)...) {
+    }
+
+    template <class State, class Action>
+    auto operator()(State&& state, Action&& action) const {
+      return combined(std::forward<State>(state), std::forward<Action>(action),
+                      std::make_index_sequence<sizeof...(Reducers)>{});
+    }
+
+    private:
+    template <class State, class Action, size_t... Indexes>
+    auto combined(State&& state, Action&& action, std::index_sequence<Indexes...>) const {
+      return std::decay_t<State>{ (
+      std::invoke(std::get<Indexes>(mReducers),
+                  redux::get<Indexes, sizeof...(Indexes)>(state), action))... };
+    }
+
+    std::tuple<Reducers...> mReducers;
+  };
+
+  template <class... ParamReducers>
+  CombinedReducer(ParamReducers&&...)->CombinedReducer<std::decay_t<ParamReducers>...>;
 
   template <class... Reducers>
   auto combineReducers(Reducers&&... reducers) {
-    return combineReducersImpl(std::make_index_sequence<sizeof...(Reducers)>{},
-                               std::make_tuple(std::forward<Reducers>(reducers)...));
+    return CombinedReducer{ std::forward<Reducers>(reducers)... };
   }
 }

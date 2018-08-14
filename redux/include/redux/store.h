@@ -18,11 +18,14 @@ namespace redux {
     template <class Action>
     void dispatch(Action&& action) {
       mEventLoop.post([=, applyAction{ std::forward<Action>(action) }] {
-        mState = mReducer(std::move(mState), applyAction, [&](auto state) {
-          mView(state);
-          return state;
-        });
+        mState = mReducer(std::move(mState), applyAction);
+
+        // partial update
       });
+    }
+
+    void update() {
+      // full update
     }
 
     State getState() const {

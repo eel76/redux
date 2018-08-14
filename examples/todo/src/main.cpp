@@ -17,9 +17,9 @@ auto drawTodos() {
 }
 
 int main() {
-  auto const visibilityFilter = redux::Reducer<action::SetVisibilityFilter>();
-  auto const todos   = redux::Reducer<action::AddTodo, action::ToggleTodo>();
-  auto const reducer = combineReducers(todos, visibilityFilter);
+  auto const visibilityFilter = redux::Reducer<action::SetVisibilityFilter>{};
+  auto const todos   = redux::Reducer<action::AddTodo, action::ToggleTodo>{};
+  auto const reducer = redux::CombinedReducer{ todos, visibilityFilter };
 
   // auto const views = redux::Views{ drawVisibilityFilter(), drawTodos() };
   auto const view = combineViews(drawVisibilityFilter(), drawTodos());
