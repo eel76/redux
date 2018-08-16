@@ -22,12 +22,12 @@ namespace redux {
         mState = mReducer(std::move(mState), applyAction);
         // mState = mReducer(mState, applyAction);
 
-        mReducer.update<Action>(updateViews(), mState);
+        mReducer.updateAffected<Action>(updateViews(), mState);
       });
     }
 
     void update() {
-      mReducer.visit(updateViews(), mState);
+      mReducer.updateAll(updateViews(), mState);
     }
 
     State getState() const {

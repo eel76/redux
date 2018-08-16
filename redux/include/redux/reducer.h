@@ -24,15 +24,15 @@ namespace redux {
   template <class... Actions>
   struct Reducer : Overloaded<ModifyState<Actions>..., ForwardState>
   {
-    template <class Visitor, class State>
-    void visit(Visitor&& visitor, State&& state) const {
-      std::invoke(std::forward<Visitor>(visitor), std::forward<State>(state));
+    template <class Updater, class State>
+    void updateAll(Updater&& updater, State&& state) const {
+      std::invoke(std::forward<Updater>(updater), std::forward<State>(state));
     }
 
-    template <class Action, class Visitor, class State>
-    void update(Visitor&& visitor, State&& state) const {
+    template <class Action, class Updater, class State>
+    void updateAffected(Updater&& updater, State&& state) const {
       if constexpr (std::disjunction_v<std::is_same<Actions, Action>...>)
-        std::invoke(std::forward<Visitor>(visitor), std::forward<State>(state));
+        std::invoke(std::forward<Updater>(updater), std::forward<State>(state));
     }
   };
 
@@ -50,16 +50,16 @@ namespace redux {
                       std::make_index_sequence<sizeof...(Reducers)>{});
     }
 
-    template <class Visitor, class State>
-    void visit(Visitor&& visitor, State&& state) const {
-      visit(std::forward<Visitor>(visitor), std::forward<State>(state),
-            std::make_index_sequence<sizeof...(Reducers)>{});
+    template <class Updater, class State>
+    void updateAll(Updater&& updater, State&& state) const {
+      updateAll(std::forward<Updater>(updater), std::forward<State>(state),
+                std::make_index_sequence<sizeof...(Reducers)>{});
     }
 
-    template <class Action, class Visitor, class State>
-    void update(Visitor&& visitor, State&& state) const {
-      update<Action>(std::forward<Visitor>(visitor), std::forward<State>(state),
-                     std::make_index_sequence<sizeof...(Reducers)>{});
+    template <class Action, class Updater, class State>
+    void updateAffected(Updater&& updater, State&& state) const {
+      updateAffected<Action>(std::forward<Updater>(updater), std::forward<State>(state),
+                             std::make_index_sequence<sizeof...(Reducers)>{});
     }
 
   private:
@@ -71,31 +71,30 @@ namespace redux {
                   std::forward<Action>(action)))... };
     }
 
-    template <class Visitor, class State, size_t... Indexes>
-    void visit(Visitor&& visitor, State&& state, std::index_sequence<Indexes...>) const {
+    template <class Updater, class State, size_t... Indexes>
+    void updateAll(Updater&& updater, State&& state, std::index_sequence<Indexes...>) const {
       using ignored = int[];
-      (void)ignored{
-        1,
-        (std::invoke([reducer{ std::get<Indexes>(mReducers) }, visitor](
-                     auto&& childState) { reducer.visit(visitor, childState); },
-                     redux::get<Indexes, sizeof...(Indexes)>(state)),
-         void(), int{})...
-      };
+      (void)ignored{ 1, (std::invoke(
+                         [reducer{ std::get<Indexes>(mReducers) }, updater](auto&& childState) {
+                           reducer.updateAll(updater, childState);
+                         },
+                         redux::get<Indexes, sizeof...(Indexes)>(state)),
+                         void(), int{})... };
 
-      std::invoke(visitor, state);
+      std::invoke(updater, state);
     }
 
-    template <class Action, class Visitor, class State, size_t... Indexes>
-    void update(Visitor&& visitor, State&& state, std::index_sequence<Indexes...>) const {
-      auto const childVisitor = [=](auto&& childState) {
-        visitor(childState);
-        visitor(state);
+    template <class Action, class Updater, class State, size_t... Indexes>
+    void updateAffected(Updater&& updater, State&& state, std::index_sequence<Indexes...>) const {
+      auto const childUpdater = [=](auto&& childState) {
+        updater(childState);
+        updater(state);
       };
 
       using ignored = int[];
       (void)ignored{ 1, (std::invoke(
-                         [reducer{ std::get<Indexes>(mReducers) }, childVisitor](auto&& childState) {
-                           reducer.update<Action>(childVisitor, childState);
+                         [reducer{ std::get<Indexes>(mReducers) }, childUpdater](auto&& childState) {
+                           reducer.updateAffected<Action>(childUpdater, childState);
                          },
                          redux::get<Indexes, sizeof...(Indexes)>(state)),
                          void(), int{})... };
