@@ -5,7 +5,7 @@
 
 namespace redux {
   template <class Action>
-  struct Invoke
+  struct ModifyState
   {
     template <class State>
     auto operator()(State&& state, Action&& action) const {
@@ -22,8 +22,13 @@ namespace redux {
   };
 
   template <class... Actions>
-  struct Reducer : Overloaded<Invoke<Actions>..., ForwardState>
-  {};
+  struct Reducer : Overloaded<ModifyState<Actions>..., ForwardState>
+  {
+    template <class Visitor, class State>
+    void visit(Visitor&& visitor, State&& state) const {
+      std::invoke(std::forward<Visitor>(visitor), std::forward<State>(state));
+    }
+  };
 
   template <class... Reducers>
   struct CombinedReducer
@@ -34,9 +39,15 @@ namespace redux {
     }
 
     template <class State, class Action>
-    auto operator()(State&& state, Action&& action) const {
+    decltype(auto) operator()(State&& state, Action&& action) const {
       return combined(std::forward<State>(state), std::forward<Action>(action),
                       std::make_index_sequence<sizeof...(Reducers)>{});
+    }
+
+    template <class Visitor, class State>
+    void visit(Visitor&& visitor, State&& state) const {
+      visit(std::forward<Visitor>(visitor), std::forward<State>(state),
+            std::make_index_sequence<sizeof...(Reducers)>{});
     }
 
     private:
@@ -44,7 +55,14 @@ namespace redux {
     auto combined(State&& state, Action&& action, std::index_sequence<Indexes...>) const {
       return std::decay_t<State>{ (
       std::invoke(std::get<Indexes>(mReducers),
-                  redux::get<Indexes, sizeof...(Indexes)>(state), action))... };
+                  redux::get<Indexes, sizeof...(Indexes)>(std::forward<State>(state)),
+                  std::forward<Action>(action)))... };
+    }
+
+    template <class Visitor, class State, size_t... Indexes>
+    void visit(Visitor&& visitor, State&& state, std::index_sequence<Indexes...>) {
+      visit(std::forward<Visitor>(visitor), std::forward<State>(state),
+            std::make_index_sequence<sizeof...(Reducers)>{});
     }
 
     std::tuple<Reducers...> mReducers;

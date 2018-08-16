@@ -19,6 +19,7 @@ namespace redux {
     void dispatch(Action&& action) {
       mEventLoop.post([=, applyAction{ std::forward<Action>(action) }] {
         mState = mReducer(std::move(mState), applyAction);
+        // mState = mReducer(mState, applyAction);
 
         // partial update
       });

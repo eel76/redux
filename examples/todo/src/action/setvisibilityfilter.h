@@ -1,5 +1,5 @@
 #pragma once
-#include "state/visibilityfilter.h"
+#include "state.h"
 
 namespace action {
   struct SetVisibilityFilter

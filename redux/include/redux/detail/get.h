@@ -12,7 +12,7 @@ namespace redux {
       template <class Structure>
       decltype(auto) operator()(Structure&& s) {
         auto&& [a] = std::forward<Structure>(s);
-        return std::get<index>(std::forward_as_tuple(a));
+        return std::get<index>(std::forward_as_tuple(std::forward<decltype(a)> (a)));
       }
     };
 
@@ -22,7 +22,8 @@ namespace redux {
       template <class Structure>
       decltype(auto) operator()(Structure&& s) {
         auto&& [a,b] = std::forward<Structure>(s);
-        return std::get<index>(std::forward_as_tuple(a, b));
+        return std::get<index>(std::forward_as_tuple(std::forward<decltype(a)>(a),
+                                                     std::forward<decltype(b)>(b)));
       }
     };
 
@@ -32,7 +33,9 @@ namespace redux {
       template <class Structure>
       decltype(auto) operator()(Structure&& s) {
         auto&& [a, b, c] = std::forward<Structure>(s);
-        return std::get<index>(std::forward_as_tuple(a, b, c));
+        return std::get<index>(std::forward_as_tuple(std::forward<decltype(a)>(a),
+                                                     std::forward<decltype(b)>(b),
+                                                     std::forward<decltype(c)>(c)));
       }
     };
 

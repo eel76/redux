@@ -2,7 +2,7 @@
 #include "action/setvisibilityfilter.h"
 #include "action/toggletodo.h"
 #include "redux.h"
-#include "state/todoapp.h"
+#include "state.h"
 
 #include <iostream>
 
@@ -26,7 +26,7 @@ int main() {
 
   auto store = redux::Store{ state::TodoApp{}, reducer, view };
 
-  std::cout << "before\n";
+  // std::cout << "before\n";
 
   store.dispatch(action::addTodo("Learn about actions"));
   store.dispatch(action::addTodo("Learn about reducers"));
@@ -35,7 +35,8 @@ int main() {
   store.dispatch(action::toggleTodo(1));
 
   store.dispatch(action::setVisibilityFilter(state::VisibilityFilter::SHOW_COMPLETED));
-  std::cout << "after\n";
+
+  // std::cout << "after\n";
 
   // auto event = char{};
 
