@@ -8,6 +8,7 @@ namespace state {
     std::string text;
     bool        completed;
   };
+
   using Todos = std::vector<Todo>;
 
   enum class VisibilityFilter { SHOW_ALL, SHOW_COMPLETED, SHOW_ACTIVE };

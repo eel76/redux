@@ -8,7 +8,7 @@ namespace redux {
   {
     using Updater::operator();
     template <class Unknown>
-    void operator()(Unknown&&) const {
+    constexpr void operator()(Unknown&&) const {
     }
   };
 
@@ -24,16 +24,16 @@ namespace redux {
     }
 
     template <class State>
-    void operator()(State state) const {
-      invoke(mViews, state,
+    void operator()(State&& state) const {
+      invoke(std::forward<State>(state),
              std::make_index_sequence<std::tuple_size<decltype(mViews)>{}>{});
     }
 
     private:
-    template <class Tuple, size_t... Is, class State>
-    static void invoke(Tuple t, State state, std::index_sequence<Is...>) {
-      using swallow = int[];
-      (void)swallow{ 1, (std::invoke(get<Is>(t), state), void(), int{})... };
+    template <class State, size_t... Is>
+    void invoke(State state, std::index_sequence<Is...>) const {
+      using ignored = int[];
+      (void)ignored{ 1, (std::invoke(get<Is>(mViews), state), void(), int{})... };
     }
     std::tuple<Views...> mViews;
   };

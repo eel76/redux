@@ -6,13 +6,14 @@ namespace redux {
   template <class State, class Reducer, class View>
   class Store
   {
-    public:
+  public:
     template <class StateParam, class ReducerParam, class ViewParam>
     Store(StateParam&& initial, ReducerParam&& reducer, ViewParam&& view)
     : mState(std::forward<StateParam>(initial))
     , mReducer(std::forward<ReducerParam>(reducer))
     , mView(std::forward<ViewParam>(view))
     , mEventLoop() {
+      update();
     }
 
     template <class Action>
@@ -21,19 +22,25 @@ namespace redux {
         mState = mReducer(std::move(mState), applyAction);
         // mState = mReducer(mState, applyAction);
 
-        // partial update
+        mReducer.update<Action>(updateViews(), mState);
       });
     }
 
     void update() {
-      // full update
+      mReducer.visit(updateViews(), mState);
     }
 
     State getState() const {
       return mState;
     }
 
-    private:
+  private:
+    auto updateViews() const {
+      return [&](auto&& state) {
+        std::invoke(mView, std::forward<decltype(state)>(state));
+      };
+    }
+
     State     mState;
     Reducer   mReducer;
     View      mView;

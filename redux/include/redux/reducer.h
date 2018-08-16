@@ -28,6 +28,12 @@ namespace redux {
     void visit(Visitor&& visitor, State&& state) const {
       std::invoke(std::forward<Visitor>(visitor), std::forward<State>(state));
     }
+
+    template <class Action, class Visitor, class State>
+    void update(Visitor&& visitor, State&& state) const {
+      if constexpr (std::disjunction_v<std::is_same<Actions, Action>...>)
+        std::invoke(std::forward<Visitor>(visitor), std::forward<State>(state));
+    }
   };
 
   template <class... Reducers>
@@ -50,7 +56,13 @@ namespace redux {
             std::make_index_sequence<sizeof...(Reducers)>{});
     }
 
-    private:
+    template <class Action, class Visitor, class State>
+    void update(Visitor&& visitor, State&& state) const {
+      update<Action>(std::forward<Visitor>(visitor), std::forward<State>(state),
+                     std::make_index_sequence<sizeof...(Reducers)>{});
+    }
+
+  private:
     template <class State, class Action, size_t... Indexes>
     auto combined(State&& state, Action&& action, std::index_sequence<Indexes...>) const {
       return std::decay_t<State>{ (
@@ -60,9 +72,33 @@ namespace redux {
     }
 
     template <class Visitor, class State, size_t... Indexes>
-    void visit(Visitor&& visitor, State&& state, std::index_sequence<Indexes...>) {
-      visit(std::forward<Visitor>(visitor), std::forward<State>(state),
-            std::make_index_sequence<sizeof...(Reducers)>{});
+    void visit(Visitor&& visitor, State&& state, std::index_sequence<Indexes...>) const {
+      using ignored = int[];
+      (void)ignored{
+        1,
+        (std::invoke([reducer{ std::get<Indexes>(mReducers) }, visitor](
+                     auto&& childState) { reducer.visit(visitor, childState); },
+                     redux::get<Indexes, sizeof...(Indexes)>(state)),
+         void(), int{})...
+      };
+
+      std::invoke(visitor, state);
+    }
+
+    template <class Action, class Visitor, class State, size_t... Indexes>
+    void update(Visitor&& visitor, State&& state, std::index_sequence<Indexes...>) const {
+      auto const childVisitor = [=](auto&& childState) {
+        visitor(childState);
+        visitor(state);
+      };
+
+      using ignored = int[];
+      (void)ignored{ 1, (std::invoke(
+                         [reducer{ std::get<Indexes>(mReducers) }, childVisitor](auto&& childState) {
+                           reducer.update<Action>(childVisitor, childState);
+                         },
+                         redux::get<Indexes, sizeof...(Indexes)>(state)),
+                         void(), int{})... };
     }
 
     std::tuple<Reducers...> mReducers;

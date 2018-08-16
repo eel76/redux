@@ -1,6 +1,6 @@
 BasedOnStyle: Google
 
-AccessModifierOffset: 0
+AccessModifierOffset: -2
 AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: true
 AlignEscapedNewlinesLeft: false
