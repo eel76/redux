@@ -18,7 +18,7 @@ auto drawVisibilityFilter() {
 }
 
 auto drawTodos() {
-  return [](state::AppState appState) {
+  return [](state::AppState const& appState) {
     std::cout << "Todos:\n";
 
     auto const isVisible =
@@ -39,7 +39,8 @@ auto drawTodos() {
 
 int main() {
   auto const visibilityFilter = redux::Reducer<action::SetVisibilityFilter>{};
-  auto const todos   = redux::Reducer<action::AddTodo, action::ToggleTodo>{};
+  auto const todos =
+  redux::Reducer<action::AddTodo, action::ToggleTodo, action::RemoveCompleted>{};
   auto const reducer = redux::CombinedReducer{ todos, visibilityFilter };
   auto const view    = redux::combinedView(drawVisibilityFilter(), drawTodos());
 
@@ -54,6 +55,8 @@ int main() {
   store.dispatch(action::setVisibilityFilter(state::VisibilityFilter::SHOW_COMPLETED));
 
   store.dispatch(action::removeCompleted());
+
+  store.dispatch(action::setVisibilityFilter(state::VisibilityFilter::SHOW_ACTIVE));
 
   // auto event = char{};
 

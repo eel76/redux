@@ -7,8 +7,7 @@ namespace redux {
   struct View : Updater
   {
     using Updater::operator();
-    template <class Unknown>
-    constexpr void operator()(Unknown&&) const {
+    void           operator()(...) const {
     }
   };
 
