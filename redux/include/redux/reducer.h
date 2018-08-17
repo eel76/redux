@@ -8,8 +8,8 @@ namespace redux {
   struct ModifyState
   {
     template <class State>
-    auto operator()(State&& state, Action&& action) const {
-      return std::invoke(std::forward<Action>(action), std::forward<State>(state));
+    auto operator()(State&& state, Action action) const {
+      return std::invoke(action, std::forward<State>(state));
     }
   };
 
