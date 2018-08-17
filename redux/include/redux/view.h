@@ -32,8 +32,7 @@ namespace redux {
   private:
     template <class State, size_t... Is>
     void invoke(State state, std::index_sequence<Is...>) const {
-      using ignored = int[];
-      (void)ignored{ 1, (std::invoke(get<Is>(mViews), state), void(), int{})... };
+      ((void)std::get<Is>(mViews)(state), ...);
     }
     std::tuple<Views...> mViews;
   };

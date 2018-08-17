@@ -73,31 +73,22 @@ namespace redux {
 
     template <class Updater, class State, size_t... Indexes>
     void updateAll(Updater&& updater, State&& state, std::index_sequence<Indexes...>) const {
-      using ignored = int[];
-      (void)ignored{ 1, (std::invoke(
-                         [reducer{ std::get<Indexes>(mReducers) }, updater](auto&& childState) {
-                           reducer.updateAll(updater, childState);
-                         },
-                         redux::get<Indexes, sizeof...(Indexes)>(state)),
-                         void(), int{})... };
+      ((void)std::get<Indexes>(mReducers).updateAll(
+       updater, redux::get<Indexes, sizeof...(Indexes)>(state)),
+       ...);
 
       std::invoke(updater, state);
     }
 
     template <class Action, class Updater, class State, size_t... Indexes>
     void updateAffected(Updater&& updater, State&& state, std::index_sequence<Indexes...>) const {
-      auto const childUpdater = [=](auto&& childState) {
-        updater(childState);
-        updater(state);
-      };
-
-      using ignored = int[];
-      (void)ignored{ 1, (std::invoke(
-                         [reducer{ std::get<Indexes>(mReducers) }, childUpdater](auto&& childState) {
-                           reducer.updateAffected<Action>(childUpdater, childState);
-                         },
-                         redux::get<Indexes, sizeof...(Indexes)>(state)),
-                         void(), int{})... };
+      ((void)std::get<Indexes>(mReducers).updateAffected<Action>(
+       [=](auto&& child) {
+         updater(child);
+         updater(state);
+       },
+       redux::get<Indexes, sizeof...(Indexes)>(state)),
+       ...);
     }
 
     std::tuple<Reducers...> mReducers;
