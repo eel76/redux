@@ -5,15 +5,22 @@
 #include "state.h"
 
 #include <iostream>
+#include <map>
 
 auto drawVisibilityFilter() {
-  return redux::View{ [](state::VisibilityFilter) {
-    std::cout << "Draw VisibilityFilter\n";
+  return redux::View{ [](state::VisibilityFilter visibilityFilter) {
+    auto filters = std::map<state::VisibilityFilter, char const*>{
+      { { state::VisibilityFilter::SHOW_ALL, "show all" },
+        { state::VisibilityFilter::SHOW_COMPLETED, "show completed" },
+        { state::VisibilityFilter::SHOW_ACTIVE, "show active" } }
+    };
+
+    std::cout << "Filter: " << filters[visibilityFilter] << "\n";
   } };
 }
 
 auto drawTodos() {
-  return redux::View{ [](state::TodoApp) { std::cout << "Draw Todos\n"; } };
+  return redux::View{ [](state::AppState) { std::cout << "Draw Todos\n"; } };
 }
 
 int main() {
@@ -22,7 +29,7 @@ int main() {
   auto const reducer = redux::CombinedReducer{ todos, visibilityFilter };
   auto const combinedView = combineViews(drawVisibilityFilter(), drawTodos());
 
-  auto store = redux::Store{ state::TodoApp{}, reducer, combinedView };
+  auto store = redux::Store{ state::AppState{}, reducer, combinedView };
 
   store.dispatch(action::addTodo("Learn about actions"));
   store.dispatch(action::addTodo("Learn about reducers"));
