@@ -18,7 +18,7 @@ namespace redux {
 
     template <class Action>
     void dispatch(Action&& action) {
-      mEventLoop.post([=, applyAction{ std::forward<Action>(action) }] {
+      mEventLoop.post([&, applyAction{ std::forward<Action>(action) }] {
         mState = mReducer(std::move(mState), applyAction);
         // mState = mReducer(mState, applyAction);
 

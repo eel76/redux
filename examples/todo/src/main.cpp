@@ -1,6 +1,4 @@
-#include "action/addtodo.h"
-#include "action/setvisibilityfilter.h"
-#include "action/toggletodo.h"
+#include "action.h"
 #include "redux.h"
 #include "state.h"
 
@@ -15,12 +13,28 @@ auto drawVisibilityFilter() {
         { state::VisibilityFilter::SHOW_ACTIVE, "show active" } }
     };
 
-    std::cout << "Filter: " << filters[visibilityFilter] << "\n";
+    std::cout << "Filter:\n  " << filters[visibilityFilter] << "\n";
   };
 }
 
 auto drawTodos() {
-  return [](state::AppState) { std::cout << "Draw Todos\n"; };
+  return [](state::AppState appState) {
+    std::cout << "Todos:\n";
+
+    auto const isVisible =
+    std::map<state::VisibilityFilter, std::function<bool(state::Todo const&)>>{
+      { state::VisibilityFilter::SHOW_ALL, [](auto&&) { return true; } },
+      { state::VisibilityFilter::SHOW_COMPLETED,
+        [](auto&& todo) { return todo.completed; } },
+      { state::VisibilityFilter::SHOW_ACTIVE,
+        [](auto&& todo) { return !todo.completed; } }
+    }[appState.visibilityFilter];
+
+    for (auto&& todo : appState.todos)
+      if (isVisible(todo))
+        std::cout << "  " << todo.text << ": "
+                  << (todo.completed ? "completed" : "active") << "\n";
+  };
 }
 
 int main() {
@@ -38,6 +52,8 @@ int main() {
   store.dispatch(action::toggleTodo(1));
 
   store.dispatch(action::setVisibilityFilter(state::VisibilityFilter::SHOW_COMPLETED));
+
+  store.dispatch(action::removeCompleted());
 
   // auto event = char{};
 

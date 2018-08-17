@@ -8,16 +8,16 @@ namespace redux {
   struct ModifyState
   {
     template <class State>
-    auto operator()(State&& state, Action action) const {
-      return std::invoke(action, std::forward<State>(state));
+    auto operator()(State const& state, Action action) const {
+      return action(state);
     }
   };
 
   struct ForwardState
   {
     template <class State, class Unknown>
-    decltype(auto) operator()(State&& state, Unknown&&) const {
-      return std::forward<State>(state);
+    decltype(auto) operator()(State const& state, Unknown&&) const {
+      return state;
     }
   };
 
@@ -45,7 +45,7 @@ namespace redux {
     }
 
     template <class State, class Action>
-    decltype(auto) operator()(State&& state, Action&& action) const {
+    auto operator()(State&& state, Action&& action) const {
       return combined(std::forward<State>(state), std::forward<Action>(action),
                       std::make_index_sequence<sizeof...(Reducers)>{});
     }
