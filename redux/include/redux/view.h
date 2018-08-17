@@ -29,7 +29,7 @@ namespace redux {
              std::make_index_sequence<std::tuple_size<decltype(mViews)>{}>{});
     }
 
-    private:
+  private:
     template <class State, size_t... Is>
     void invoke(State state, std::index_sequence<Is...>) const {
       using ignored = int[];
@@ -40,8 +40,8 @@ namespace redux {
   template <class... ParamViews>
   CombinedView(ParamViews...)->CombinedView<std::decay_t<ParamViews>...>;
 
-  template <class... Views>
-  auto combineViews(Views&&... views) {
-    return CombinedView{ std::forward<Views>(views)... };
+  template <class... Updaters>
+  auto combinedView(Updaters&&... updaters) {
+    return CombinedView{ View{ std::forward<Updaters>(updaters) }... };
   }
 }
