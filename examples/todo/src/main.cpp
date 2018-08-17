@@ -21,26 +21,21 @@ auto drawTodos() {
   return [](state::AppState const& appState) {
     std::cout << "Todos:\n";
 
-    auto const isVisible =
-    std::map<state::VisibilityFilter, std::function<bool(state::Todo const&)>>{
+    auto const isVisible = std::map<state::VisibilityFilter, std::function<bool(state::Todo const&)>>{
       { state::VisibilityFilter::SHOW_ALL, [](auto&&) { return true; } },
-      { state::VisibilityFilter::SHOW_COMPLETED,
-        [](auto&& todo) { return todo.completed; } },
-      { state::VisibilityFilter::SHOW_ACTIVE,
-        [](auto&& todo) { return !todo.completed; } }
+      { state::VisibilityFilter::SHOW_COMPLETED, [](auto&& todo) { return todo.completed; } },
+      { state::VisibilityFilter::SHOW_ACTIVE, [](auto&& todo) { return !todo.completed; } }
     }[appState.visibilityFilter];
 
     for (auto&& todo : appState.todos)
       if (isVisible(todo))
-        std::cout << "  " << todo.text << ": "
-                  << (todo.completed ? "completed" : "active") << "\n";
+        std::cout << "  " << todo.text << ": " << (todo.completed ? "completed" : "active") << "\n";
   };
 }
 
 int main() {
   auto const visibilityFilter = redux::Reducer<action::SetVisibilityFilter>{};
-  auto const todos =
-  redux::Reducer<action::AddTodo, action::ToggleTodo, action::RemoveCompleted>{};
+  auto const todos = redux::Reducer<action::AddTodo, action::ToggleTodo, action::RemoveCompleted>{};
   auto const reducer = redux::CombinedReducer{ todos, visibilityFilter };
   auto const view    = redux::combinedView(drawVisibilityFilter(), drawTodos());
 

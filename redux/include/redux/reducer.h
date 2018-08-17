@@ -15,8 +15,8 @@ namespace redux {
 
   struct ForwardState
   {
-    template <class State, class Unknown>
-    decltype(auto) operator()(State const& state, Unknown&&) const {
+    template <class State>
+    decltype(auto) operator()(State const& state, ...) const {
       return state;
     }
   };
@@ -65,17 +65,14 @@ namespace redux {
   private:
     template <class State, class Action, size_t... Indexes>
     auto combined(State&& state, Action&& action, std::index_sequence<Indexes...>) const {
-      return std::decay_t<State>{ (
-      std::invoke(std::get<Indexes>(mReducers),
-                  redux::get<Indexes, sizeof...(Indexes)>(std::forward<State>(state)),
-                  std::forward<Action>(action)))... };
+      return std::decay_t<State>{ (std::invoke(std::get<Indexes>(mReducers),
+                                               redux::get<Indexes, sizeof...(Indexes)>(std::forward<State>(state)),
+                                               std::forward<Action>(action)))... };
     }
 
     template <class Updater, class State, size_t... Indexes>
     void updateAll(Updater&& updater, State&& state, std::index_sequence<Indexes...>) const {
-      ((void)std::get<Indexes>(mReducers).updateAll(
-       updater, redux::get<Indexes, sizeof...(Indexes)>(state)),
-       ...);
+      ((void)std::get<Indexes>(mReducers).updateAll(updater, redux::get<Indexes, sizeof...(Indexes)>(state)), ...);
 
       std::invoke(updater, state);
     }

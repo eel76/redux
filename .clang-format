@@ -29,7 +29,7 @@ BreakBeforeBraces: Custom
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializersBeforeComma: true
 BreakConstructorInitializers: BeforeColon
-ColumnLimit: 80
+ColumnLimit: 100
 CommentPragmas: ''
 CompactNamespaces: true
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
